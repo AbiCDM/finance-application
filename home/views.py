@@ -2,19 +2,9 @@ from django.shortcuts import render,redirect
 from .models import *
 from django.shortcuts import render, redirect
 from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth import login
+from django.contrib.auth import authenticate, login as user_login , logout as user_logout
+from django.http import HttpResponseRedirect
 
-def register(request):
-    if request.method == 'POST':
-        form = UserCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            login(request, user)  # Автоматический вход после регистрации
-            return redirect('home')  # Перенаправляем на главную
-    else:
-        form = UserCreationForm()
-    
-    return render(request, 'register.html', {'form': form})
 
 
 def home(request):
@@ -39,3 +29,50 @@ def home(request):
 
     context = {'profile' : profile , 'expenses' : expenses}
     return render(request , 'home.html' , context)
+
+def login_view(request):
+    error = None  
+
+    if request.method == 'POST':
+        login = request.POST.get('login')
+        password = request.POST.get('password')
+
+        usr = authenticate(request, username=login, password=password)
+        if usr is not None:
+            user_login(request, usr)
+            return HttpResponseRedirect('/')
+        else:
+            error = "Неверный логин или пароль."
+
+    return render(request, 'login.html', {'error': error})
+
+
+def reg_view(request):
+    error = None  
+
+    if request.method == 'POST':
+        login = request.POST.get('login')
+        password = request.POST.get('password')
+        password2 = request.POST.get('password2')
+
+        if password == password2:
+            if User.objects.filter(username=login).exists():
+                error = "Пользователь с таким логином уже существует."
+            else:
+                try:
+                    User.objects.create_user(username=login, password=password)
+                    usr = authenticate(request, username=login, password=password)
+                    if usr is not None:
+                        user_login(request, usr)
+                        return HttpResponseRedirect('/')
+                    else:
+                        error = "Ошибка при входе после регистрации."
+                except Exception as e:
+                    error = f"Ошибка при создании пользователя: {str(e)}"
+        else:
+            error = "Пароли не совпадают."
+
+    return render(request, 'reg.html', {'error': error})
+
+    
+    return render(request, 'reg.html')
