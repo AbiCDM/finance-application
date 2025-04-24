@@ -36,9 +36,11 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'django.contrib.sites',
     'django.contrib.staticfiles',
     'home'
 ]
+SITE_ID = 1
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -126,4 +128,11 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'public/static')
-
+DOMAIN_NAME = 'http://127.0.0.1:8000'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  # Используем SMTP для отправки почты
+EMAIL_HOST = 'smtp.gmail.com'  # Адрес сервера SMTP для Gmail
+EMAIL_PORT = 587  # Порт для TLS соединений
+EMAIL_USE_TLS = True  # Включаем TLS для безопасности
+EMAIL_HOST_USER = 'zinedinnizam@gmail.com'  # Ваш адрес Gmail
+EMAIL_HOST_PASSWORD = 'fveh lriy shdb ztda'  # Ваш пароль (рекомендуется использовать App Password для Gmail)
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER  # Адрес отправителя, обычно это ваш email

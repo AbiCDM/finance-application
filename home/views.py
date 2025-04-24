@@ -6,6 +6,13 @@ from django.contrib.auth import authenticate, login as user_login , logout as us
 from django.http import HttpResponseRedirect
 
 
+from .forms import RegisterForm
+
+from django.contrib.auth.forms import PasswordResetForm
+from django.contrib.sites.shortcuts import get_current_site
+from django.core.mail import send_mail
+from django.contrib.sites.models import Site
+
 
 def home(request):
     profile = Profile.objects.filter(user = request.user).first()
@@ -40,7 +47,7 @@ def login_view(request):
         usr = authenticate(request, username=login, password=password)
         if usr is not None:
             user_login(request, usr)
-            return HttpResponseRedirect('/')
+            return redirect('/')  # Перенаправляем на домашнюю страницу
         else:
             error = "Неверный логин или пароль."
 
@@ -48,31 +55,45 @@ def login_view(request):
 
 
 def reg_view(request):
-    error = None  
-
     if request.method == 'POST':
-        login = request.POST.get('login')
-        password = request.POST.get('password')
-        password2 = request.POST.get('password2')
-
-        if password == password2:
-            if User.objects.filter(username=login).exists():
-                error = "Пользователь с таким логином уже существует."
-            else:
-                try:
-                    User.objects.create_user(username=login, password=password)
-                    usr = authenticate(request, username=login, password=password)
-                    if usr is not None:
-                        user_login(request, usr)
-                        return HttpResponseRedirect('/')
-                    else:
-                        error = "Ошибка при входе после регистрации."
-                except Exception as e:
-                    error = f"Ошибка при создании пользователя: {str(e)}"
+        form = RegisterForm(request.POST)
+        if form.is_valid():  # Если форма прошла валидацию
+            user = form.save()  # Сохраняем нового пользователя
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password1')  # Используем пароль1, так как он был введен дважды
+            user = authenticate(request, username=username, password=password)
+            if user is not None:
+                user_login(request, user)  # Входим в систему
+                return redirect('/')  # Перенаправление на главную страницу
         else:
-            error = "Пароли не совпадают."
+            # Если форма не прошла валидацию, передаем ошибки в шаблон
+            return render(request, 'reg.html', {'form': form})
 
-    return render(request, 'reg.html', {'error': error})
+    else:
+        form = RegisterForm()  # Если метод GET, создаем пустую форму
 
-    
-    return render(request, 'reg.html')
+    return render(request, 'reg.html', {'form': form})
+
+
+def forgot_password_view(request):
+    if request.method == 'POST':
+        form = PasswordResetForm(request.POST)
+        if form.is_valid():
+            # Указываем локальный домен
+            domain = '127.0.0.1:8000'  # Локальный сервер
+
+            # Ссылка для сброса пароля генерируется автоматически
+            form.save(
+                request=request,
+                use_https=request.is_secure(),
+                from_email="noreply@yourdomain.com",  # Ваш email
+                domain_override=domain,
+            )
+
+            return redirect('password_reset_done')  # Переход на страницу уведомления
+        else:
+            error = "Ошибка при восстановлении пароля."
+    else:
+        form = PasswordResetForm()
+
+    return render(request, 'forgot_password.html', {'form': form, 'error': error if 'error' in locals() else None})
