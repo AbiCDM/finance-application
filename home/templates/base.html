@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ru">
   <head>
@@ -8,6 +9,37 @@
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
       
+      .transaction-list {
+        list-style-type: none;
+        padding: 0;
+        margin-top: 20px;
+      }
+
+      .transaction-list li {
+        background-color: #2e2e2e;
+        color: white;
+        margin: 10px 0;
+        padding: 15px 20px;
+        border-radius: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        transition: transform 0.2s ease;
+      }
+
+      .transaction-list li:hover {
+        transform: scale(1.02);
+      }
+
+      .transaction-list li.plus {
+        border-left: 6px solid #28a745;
+      }
+
+      .transaction-list li.minus {
+        border-left: 6px solid #dc3545;
+      }
+
       :root {
         --primary-color: #1e1e1e;
         --secondary-color: #1f1f1f;
@@ -37,6 +69,45 @@
         color: white;
       }
 
+      /* Стили для шапки с никнеймом и аватаркой */
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        background-color: var(--secondary-color);
+        color: white;
+        border-radius: 10px;
+      }
+
+      .user-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .user-info img {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+      }
+
+      .user-info span {
+        font-size: 1.2rem;
+      }
+
+      .user-info a {
+        color: #f55;
+        font-size: 1.2rem;
+        text-decoration: none;
+        margin-left: 10px;
+      }
+
+      .user-info a:hover {
+        text-decoration: underline;
+      }
+
+      /* Остальные стили остаются без изменений */
       .balance-container {
         display: flex;
         justify-content: space-between;
@@ -109,9 +180,10 @@
       button:hover {
         background-color: #2e59d9;
       }
+
       /* Стили для модального окна */
       .modal {
-        display: none; /* Скрыто по умолчанию */
+        display: none;
         position: fixed;
         z-index: 1;
         left: 0;
@@ -149,6 +221,21 @@
     </style>
   </head>
   <body>
+    <div class="header">
+      <div class="logo">
+        <h2>Expense Tracker</h2>
+      </div>
+
+      {% if user.is_authenticated %}
+        <div class="user-info">
+          <!-- Аватарка и логин -->
+          <img src="{% static 'img/default-avatar.png' %}" alt="avatar">
+          <span>{{ user.username }}</span>
+          <a href="{% url 'logout' %}">Выйти</a>
+        </div>
+      {% endif %}
+    </div>
+
     <div class="container">
       {% block start %}{% endblock %}
     </div>

@@ -4,7 +4,6 @@ from .models import Profile, Expense
 from django.contrib.auth import authenticate, login as user_login, logout as user_logout
 from django.http import HttpResponseRedirect
 from django.contrib.auth.forms import PasswordResetForm
-
 def home(request):
     # Получаем профиль пользователя
     profile = Profile.objects.filter(user=request.user).first()
@@ -68,6 +67,10 @@ def reg_view(request):
         form = RegisterForm()  # Если метод GET, создаем пустую форму
 
     return render(request, 'reg.html', {'form': form})
+
+def logout_view(request):
+    user_logout(request)
+    return redirect('login')
 
 def forgot_password_view(request):
     if request.method == 'POST':

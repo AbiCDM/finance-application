@@ -34,21 +34,15 @@
   </div>
 </div>
 
-<h3>History</h3>
-  <ul id="list" class="list">
-
-    {% for expense in expenses%}
-    {% if expense.expense_type == 'Positive'%}
-    <li class="plus">
-      {{expense.name}} <span>+${{expense.amount}}</span>
+<h3>История операций</h3>
+<ul id="list" class="transaction-list">
+  {% for transaction in expenses %}
+    <li class="{% if transaction.expense_type == 'Positive' %}plus{% else %}minus{% endif %}">
+      <span>{{ transaction.name }}</span>
+      <span>{{ transaction.amount }} KZT</span>
     </li>
-    {% else %}
-    <li class="minus">
-      {{expense.name}} <span>-${{expense.amount}}</span>
-    </li>
-    {% endif %}
-    {% endfor %}
-  </ul>
+  {% endfor %}
+</ul>
 
 <div class="button-block">
   <button id="open-modal-btn">Добавить операцию</button>
