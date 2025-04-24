@@ -39,7 +39,14 @@
   {% for transaction in expenses %}
     <li class="{% if transaction.expense_type == 'Positive' %}plus{% else %}minus{% endif %}">
       <span>{{ transaction.name }}</span>
-      <span>{{ transaction.amount }} KZT</span>
+      <span>
+        {{ transaction.amount }} KZT
+        <a href="{% url 'delete_transaction' transaction.id %}" 
+           onclick="return confirm('Ты точно хочешь удалить эту операцию?');" 
+           style="color: #f55; margin-left: 15px; text-decoration: none;">
+           🗑
+        </a>
+      </span>
     </li>
   {% endfor %}
 </ul>

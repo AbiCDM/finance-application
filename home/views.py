@@ -70,7 +70,7 @@ def reg_view(request):
 
 def logout_view(request):
     user_logout(request)
-    return redirect('login')
+    return redirect('reg')
 
 def forgot_password_view(request):
     if request.method == 'POST':
@@ -94,3 +94,21 @@ def forgot_password_view(request):
         form = PasswordResetForm()
 
     return render(request, 'forgot_password.html', {'form': form, 'error': error if 'error' in locals() else None})
+
+
+
+def delete_transaction(request, transaction_id):
+    transaction = Expense.objects.get(id=transaction_id, user=request.user)
+    profile = Profile.objects.get(user=request.user)
+
+    # Возвращаем сумму в зависимости от типа операции
+    if transaction.expense_type == 'Positive':
+        profile.balance -= transaction.amount
+        profile.income -= transaction.amount
+    else:
+        profile.balance += transaction.amount
+        profile.expenses -= transaction.amount
+
+    profile.save()
+    transaction.delete()
+    return redirect('home')
