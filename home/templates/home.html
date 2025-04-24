@@ -3,6 +3,18 @@
 
 <h2>Expense Tracker</h2>
 
+<div class="period-filter">
+  <form method="GET">
+    <label for="period">Период:</label>
+    <select name="period" id="period">
+      <option value="all" {% if period == 'all' %}selected{% endif %}>Все</option>
+      <option value="last_week" {% if period == 'last_week' %}selected{% endif %}>Последняя неделя</option>
+      <option value="last_month" {% if period == 'last_month' %}selected{% endif %}>Последний месяц</option>
+    </select>
+    <button type="submit">Фильтровать</button>
+  </form>
+</div>
+
 <div class="balance-container">
   <div class="balance-info">
     <h4>Общий баланс</h4>
@@ -47,6 +59,7 @@
            🗑
         </a>
       </span>
+      <span>{{ transaction.date|date:"Y-m-d H:i" }}</span>
     </li>
   {% endfor %}
 </ul>
@@ -67,8 +80,12 @@
         <input type="text" name="text" id="text" placeholder="Enter text..." required />
       </div>
       <div class="form-control">
-        <label for="amount">Amount <br /> (negative - expense, positive - income)</label>
+        <label for="amount">Amount <br /></label>
         <input type="number" name="amount" id="amount" placeholder="Enter amount..." required />
+      </div>
+      <div class="form-control">
+        <label for="date">Дата и время</label>
+        <input type="datetime-local" name="date" id="date" value="{{ current_datetime|date:'Y-m-d\TH:i' }}" required />
       </div>
       <div class="form-control">
         <label for="expense_type">Transaction Type</label>

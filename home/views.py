@@ -1,26 +1,55 @@
 from django.shortcuts import render, redirect
-from .forms import RegisterForm
+from django.utils import timezone
+from datetime import timedelta
 from .models import Profile, Expense
 from django.contrib.auth import authenticate, login as user_login, logout as user_logout
-from django.http import HttpResponseRedirect
 from django.contrib.auth.forms import PasswordResetForm
+from .forms import RegisterForm
+
 def home(request):
     # Получаем профиль пользователя
     profile = Profile.objects.filter(user=request.user).first()
-
+    expenses = Expense.objects.filter(user=request.user)
+    
     # Если профиль не найден, перенаправляем на регистрацию
     if not profile:
         return redirect('reg')
 
-    expenses = Expense.objects.filter(user=request.user)
-    
+    current_datetime = timezone.now()
+
+    period = request.GET.get('period', 'all')  # Получаем параметр периода из URL (по умолчанию - все)
+
+    if period == 'last_week':
+        last_week = current_datetime - timedelta(days=7)
+        expenses = expenses.filter(date__gte=last_week)
+    elif period == 'last_month':
+        last_month = current_datetime - timedelta(days=30)
+        expenses = expenses.filter(date__gte=last_month)
+
+    # Сортировка по дате
+    expenses = expenses.order_by('-date')  # Сортировка по убыванию даты
+
     # Обработка POST-запроса для добавления новой операции
     if request.method == 'POST':
         text = request.POST.get('text')
         amount = request.POST.get('amount')
         expense_type = request.POST.get('expense_type')
+        date = request.POST.get('date')
 
-        expense = Expense(name=text, amount=amount, expense_type=expense_type, user=request.user)
+        # Если дата не указана, используем текущую дату
+        if not date:
+            date = timezone.now()
+        else:
+            # Преобразуем строку в дату, если она была указана
+            date = timezone.datetime.strptime(date, '%Y-%m-%dT%H:%M')
+
+        expense = Expense(
+            name=text,
+            amount=amount,
+            expense_type=expense_type,
+            user=request.user,
+            date=date  # Используем переданную или текущую дату
+        )
         expense.save()
 
         # Обновляем баланс в зависимости от типа операции
@@ -32,9 +61,13 @@ def home(request):
             profile.balance -= float(amount)
 
         profile.save()
-        return redirect('/')  # Перенаправление на домашнюю страницу
+        return redirect('/')  # Перенаправление на главную страницу
 
-    context = {'profile': profile, 'expenses': expenses}
+    context = {
+        'profile': profile,
+        'expenses': expenses,
+        'current_datetime': current_datetime  # Передаем текущую дату для поля ввода
+    }
     return render(request, 'home.html', context)
 
 def login_view(request):
@@ -95,20 +128,22 @@ def forgot_password_view(request):
 
     return render(request, 'forgot_password.html', {'form': form, 'error': error if 'error' in locals() else None})
 
-
-
 def delete_transaction(request, transaction_id):
-    transaction = Expense.objects.get(id=transaction_id, user=request.user)
-    profile = Profile.objects.get(user=request.user)
+    try:
+        transaction = Expense.objects.get(id=transaction_id, user=request.user)
+        profile = Profile.objects.get(user=request.user)
 
-    # Возвращаем сумму в зависимости от типа операции
-    if transaction.expense_type == 'Positive':
-        profile.balance -= transaction.amount
-        profile.income -= transaction.amount
-    else:
-        profile.balance += transaction.amount
-        profile.expenses -= transaction.amount
+        # Возвращаем сумму в зависимости от типа операции
+        if transaction.expense_type == 'Positive':
+            profile.balance -= transaction.amount
+            profile.income -= transaction.amount
+        else:
+            profile.balance += transaction.amount
+            profile.expenses -= transaction.amount
 
-    profile.save()
-    transaction.delete()
-    return redirect('home')
+        profile.save()
+        transaction.delete()
+        return redirect('home')
+    except Expense.DoesNotExist:
+        # Если операция не найдена
+        return redirect('home')
