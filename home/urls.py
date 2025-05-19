@@ -15,4 +15,5 @@ urlpatterns = [
     path('logout/', logout_view, name='logout'),
     path('delete/<int:transaction_id>/', delete_transaction, name='delete_transaction'),
     path('edit/<int:transaction_id>/', views.edit_transaction, name='edit_transaction'),
+    path('add_category/', views.add_category, name='add_category'),
 ]

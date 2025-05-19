@@ -27,39 +27,52 @@
     <h4>Общий баланс</h4>
     <h1 id="balance">{{ profile.balance }} KZT</h1>
   </div>
-  <div class="balance-info">
+
+  <div id="income-block" class="balance-info" >
     <h4>Доходы</h4>
     <p id="money-plus" class="money plus">+{{ profile.income }} KZT</p>
   </div>
-  <div class="balance-info">
+
+  <div id="expense-block" class="balance-info">
     <h4>Расходы</h4>
     <p id="money-minus" class="money minus">-{{ profile.expenses }} KZT</p>
   </div>
 </div>
 
 <h3>Категории расходов</h3>
-<div class="categories">
-  <div class="category-card">
-    <h4>Еда</h4>
-    <p>{{ profile.food }} KZT</p>
-  </div>
-  <div class="category-card">
-    <h4>Кафе</h4>
-    <p>{{ profile.cafe }} KZT</p>
-  </div>
-  <div class="category-card">
-    <h4>Транспорт</h4>
-    <p>{{ profile.transport }} KZT</p>
-  </div>
+<div id="expense-categories" class="categories">
+  {% for cat in category_expense %}
+    <div class="category-card">
+      <h4>{{ cat.name }}</h4>
+      <p>{{ cat.total|default:0 }} KZT</p>
+    </div>
+  {% endfor %}
+</div>
+
+<div id="income-categories" class="categories" style="display: none;">
+  {% for cat in category_income %}
+    <div class="category-card">
+      <h4>{{ cat.name }}</h4>
+      <p>{{ cat.total|default:0 }} KZT</p>
+    </div>
+  {% endfor %}
 </div>
 
 <h3>История операций</h3>
 <ul id="list" class="transaction-list">
   {% for transaction in expenses %}
     <li class="{% if transaction.expense_type == 'Positive' %}plus{% else %}minus{% endif %}">
-      <span>{{ transaction.name }}</span>
+      <span><strong>Название:</strong> {{ transaction.name }}</span>
+      <span><strong>Сумма:</strong> {{ transaction.amount }} KZT</span>
+      <span><strong>Категория:</strong>
+        {% if transaction.category %}
+          {{ transaction.category.name }}
+        {% else %}
+          Без категории
+        {% endif %}
+      </span>
+      <span><strong>Дата:</strong> {{ transaction.date|date:"Y-m-d H:i" }}</span>
       <span>
-        {{ transaction.amount }} KZT
         <!-- Delete button -->
         <a href="{% url 'delete_transaction' transaction.id %}" 
            onclick="return confirm('Ты точно хочешь удалить эту операцию?');" 
@@ -75,7 +88,6 @@
            ✎
         </a>
       </span>
-      <span>{{ transaction.date|date:"Y-m-d H:i" }}</span>
     </li>
   {% endfor %}
 </ul>
@@ -92,12 +104,22 @@
     <form id="form" method="POST">
       {% csrf_token %}
       <div class="form-control">
-        <label for="text">Текст</label>
+        <label for="text">Описание</label>
         <input type="text" name="text" id="text" placeholder="Enter text..." required />
       </div>
       <div class="form-control">
         <label for="amount">Сумма <br /></label>
         <input type="number" name="amount" id="amount" placeholder="Enter amount..." required />
+      </div>
+      <div class="form-control">
+        <label for="category">Категория</label>
+          <select name="category" id="category">
+            <option value="" selected>Без категории</option>
+            {% for cat in categories %}
+              <option value="{{ cat.id }}">{{ cat.name }}</option>
+            {% endfor %}
+        </select>
+        <a href="{% url 'add_category' %}" style="margin-left:10px; font-size: 0.9rem;">+ Добавить новую категорию</a>
       </div>
       <div class="form-control">
         <label for="date">Дата и время</label>
@@ -114,4 +136,32 @@
     </form>
   </div>
 </div>
+
+<script>
+  const incomeBlock = document.getElementById('income-block');
+  const expenseBlock = document.getElementById('expense-block');
+  const incomeCategories = document.getElementById('income-categories');
+  const expenseCategories = document.getElementById('expense-categories');
+
+  function activateBlock(active, inactive) {
+    active.classList.add('active-tab');
+    inactive.classList.remove('active-tab');
+  }
+
+  incomeBlock.addEventListener('click', () => {
+    incomeCategories.style.display = 'flex';
+    expenseCategories.style.display = 'none';
+    activateBlock(incomeBlock, expenseBlock);
+  });
+
+  expenseBlock.addEventListener('click', () => {
+    incomeCategories.style.display = 'none';
+    expenseCategories.style.display = 'flex';
+    activateBlock(expenseBlock, incomeBlock);
+  });
+
+  // По умолчанию подсвечиваем "Расходы"
+  activateBlock(expenseBlock, incomeBlock);
+  incomeCategories.style.display = 'none';
+</script>
 {% endblock %}

@@ -116,13 +116,30 @@
       }
 
       .balance-info {
+        background-color: #2a2a2a; /* светлее общего фона */
         text-align: center;
-        font-size: 20px;
+        padding: 15px;
+        border-radius: 10px;
+        transition: background-color 0.3s ease;
+        cursor: pointer;
       }
 
       .balance-info h1 {
         font-size: 2rem;
         margin: 10px 0;
+      }
+
+      .balance-info.active-tab {
+        background-color: var(--secondary-color); /* темный фон, как у контейнера */
+      }
+
+      #expense-block {
+        margin-right: 60px; /* уменьшаем отступ слева для расходов */
+      }
+
+
+      #income-block {
+        margin-left: 60px; /* уменьшаем отступ слева для расходов */
       }
 
       .money {
@@ -314,6 +331,11 @@
         outline: none;
         border: 2px solid #1cc88a; /* Окантовка при фокусе */
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      }
+
+      .active-tab {
+        box-shadow: 0 0 8px #4e73df;
+        border-radius: 8px;
       }
 
     </style>

@@ -1,16 +1,18 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from datetime import timedelta, datetime
 from django.utils import timezone
-from .models import Profile, Expense
+from .models import Profile, Expense, Category
 from django.contrib.auth import authenticate, login as user_login, logout as user_logout
 from django.contrib.auth.forms import PasswordResetForm
-from .forms import RegisterForm
+from .forms import RegisterForm, CategoryForm
+from django.db.models import Sum, Q
 
 
 def home(request):
     # Получаем профиль пользователя
     profile = Profile.objects.filter(user=request.user).first()
     expenses = Expense.objects.filter(user=request.user)
+    categories = Category.objects.filter(user=request.user)
     
     # Если профиль не найден, перенаправляем на регистрацию
     if not profile:
@@ -46,6 +48,11 @@ def home(request):
         amount = request.POST.get('amount')
         expense_type = request.POST.get('expense_type')
         date_str = request.POST.get('date')
+        category_id = request.POST.get('category')
+        if category_id:
+            category = Category.objects.get(id=category_id)
+        else:
+            category = None
 
         if not date_str:
             date = timezone.now()
@@ -58,7 +65,8 @@ def home(request):
             amount=amount,
             expense_type=expense_type,
             user=request.user,
-            date=date
+            date=date,
+            category=category
         )
         expense.save()
 
@@ -73,10 +81,22 @@ def home(request):
         profile.save()
         return redirect('/') 
 
+
+    category_income = Category.objects.filter(user=request.user, expense__expense_type='Positive').annotate(
+        total=Sum('expense__amount', filter=Q(expense__user=request.user, expense__expense_type='Positive'))
+    ).distinct()
+
+    category_expense = Category.objects.filter(user=request.user, expense__expense_type='Negative').annotate(
+        total=Sum('expense__amount', filter=Q(expense__user=request.user, expense__expense_type='Negative'))
+    ).distinct()
+
     context = {
         'profile': profile,
         'expenses': expenses,
-        'current_datetime': current_datetime  
+        'categories': categories,
+        'current_datetime': current_datetime,
+        'category_income': category_income,
+        'category_expense': category_expense,
     }
     return render(request, 'home.html', context)
 
@@ -208,3 +228,17 @@ def edit_transaction(request, transaction_id):
             'current_datetime': expense.date.strftime('%Y-%m-%dT%H:%M')
         }
         return render(request, 'edit_transaction.html', context)
+    
+
+
+def add_category(request):
+    if request.method == 'POST':
+        form = CategoryForm(request.POST)
+        if form.is_valid():
+            category = form.save(commit=False)
+            category.user = request.user
+            category.save()
+            return redirect('home')  # после создания редирект на главную или где нужно
+    else:
+        form = CategoryForm()
+    return render(request, 'add_category.html', {'form': form})
