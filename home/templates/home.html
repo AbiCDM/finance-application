@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block start %}
+
+<h2>Expense Tracker</h2>
+
+<div class="period-filter">
+  <form method="GET">
+    <label for="period">Период:</label>
+    <select name="period" id="period">
+      <option value="all" {% if period == 'all' %}selected{% endif %}>Все</option>
+      <option value="last_week" {% if period == 'last_week' %}selected{% endif %}>Последняя неделя</option>
+      <option value="last_month" {% if period == 'last_month' %}selected{% endif %}>Последний месяц</option>
+    </select>
+    <button type="submit">Фильтровать</button>
+  </form>
+</div>
+
+<div class="balance-container">
+  <div class="balance-info">
+    <h4>Общий баланс</h4>
+    <h1 id="balance">{{ profile.balance }} KZT</h1>
+  </div>
+  <div class="balance-info">
+    <h4>Доходы</h4>
+    <p id="money-plus" class="money plus">+{{ profile.income }} KZT</p>
+  </div>
+  <div class="balance-info">
+    <h4>Расходы</h4>
+    <p id="money-minus" class="money minus">-{{ profile.expenses }} KZT</p>
+  </div>
+</div>
+
+<h3>Категории расходов</h3>
+<div class="categories">
+  <div class="category-card">
+    <h4>Еда</h4>
+    <p>{{ profile.food }} KZT</p>
+  </div>
+  <div class="category-card">
+    <h4>Кафе</h4>
+    <p>{{ profile.cafe }} KZT</p>
+  </div>
+  <div class="category-card">
+    <h4>Транспорт</h4>
+    <p>{{ profile.transport }} KZT</p>
+  </div>
+</div>
+
+<h3>История операций</h3>
+<ul id="list" class="transaction-list">
+  {% for transaction in expenses %}
+    <li class="{% if transaction.expense_type == 'Positive' %}plus{% else %}minus{% endif %}">
+      <span>{{ transaction.name }}</span>
+      <span>
+        {{ transaction.amount }} KZT
+        <!-- Delete button -->
+        <a href="{% url 'delete_transaction' transaction.id %}" 
+           onclick="return confirm('Ты точно хочешь удалить эту операцию?');" 
+           style="color: #f55; margin-left: 15px; text-decoration: none;" 
+           title="Удалить">
+           🗑
+        </a>
+
+        <!-- Edit button -->
+        <a href="{% url 'edit_transaction' transaction.id %}" 
+           style="color: #4e73df; margin-left: 10px; text-decoration: none;" 
+           title="Редактировать">
+           ✎
+        </a>
+      </span>
+      <span>{{ transaction.date|date:"Y-m-d H:i" }}</span>
+    </li>
+  {% endfor %}
+</ul>
+
+<div class="button-block">
+  <button id="open-modal-btn">Добавить операцию</button>
+</div>
+
+<!-- Модальное окно -->
+<div id="modal" class="modal">
+  <div class="modal-content">
+    <span id="close-modal-btn" class="close-btn">&times;</span>
+    <h3>Добавить новую транзакцию</h3>
+    <form id="form" method="POST">
+      {% csrf_token %}
+      <div class="form-control">
+        <label for="text">Текст</label>
+        <input type="text" name="text" id="text" placeholder="Enter text..." required />
+      </div>
+      <div class="form-control">
+        <label for="amount">Сумма <br /></label>
+        <input type="number" name="amount" id="amount" placeholder="Enter amount..." required />
+      </div>
+      <div class="form-control">
+        <label for="date">Дата и время</label>
+        <input type="datetime-local" name="date" id="date" value="{{ current_datetime|date:'Y-m-d\TH:i' }}" required />
+      </div>
+      <div class="form-control">
+        <label for="expense_type">Тип транзакции</label>
+        <select name="expense_type" required>
+          <option value="Positive">Доход</option>
+          <option value="Negative">Расход</option>
+        </select>
+      </div>
+      <button type="submit" class="btn">Добавить транзакцию</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

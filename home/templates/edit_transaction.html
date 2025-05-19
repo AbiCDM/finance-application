@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block start %}
+<h2>Редактирование операции</h2>
+
+<form method="POST">
+  {% csrf_token %}
+  <div class="form-control">
+    <label for="text">Описание</label>
+    <input type="text" id="text" name="text" value="{{ expense.name }}" required />
+  </div>
+
+  <div class="form-control">
+    <label for="amount">Сумма</label>
+    <input type="number" id="amount" name="amount" value="{{ expense.amount }}" step="0.01" required />
+  </div>
+
+  <div class="form-control">
+    <label for="expense_type">Тип операции</label>
+    <select id="expense_type" name="expense_type" required>
+      <option value="Positive" {% if expense.expense_type == 'Positive' %}selected{% endif %}>Доход</option>
+      <option value="Negative" {% if expense.expense_type == 'Negative' %}selected{% endif %}>Расход</option>
+    </select>
+  </div>
+
+  <div class="form-control">
+    <label for="date">Дата и время</label>
+    <input type="datetime-local" id="date" name="date" value="{{ current_datetime }}" required />
+  </div>
+
+  <button type="submit" class="btn">Сохранить</button>
+  <a href="{% url 'home' %}" class="btn" style="background-color:#ccc; margin-left:10px; color:#333; text-decoration:none;">Отмена</a>
+</form>
+{% endblock %}

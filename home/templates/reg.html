@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Регистрация</title>
+    <style>
+        .error-text {
+            color: #e31c1c;
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .error-input {
+            border: 2px solid #e31c1c;
+            background-color: #f8d7da;
+        }
+        body {
+            background: linear-gradient(135deg, #ff9a9e, #fad0c4, #fad0c4);
+            background-size: 400% 400%;
+            animation: gradientBG 10s ease infinite;
+            font-family: 'Poppins', sans-serif;
+        }
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .form-container {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 40px 60px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+            transition: transform 0.3s ease-in-out;
+        }
+        .form-container:hover {
+            transform: scale(1.05);
+        }
+        h2 {
+            font-size: 32px;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .input-block {
+            margin-bottom: 1.5rem;
+        }
+        .input-block label {
+            font-size: 18px;
+            color: #333;
+            display: block;
+            margin-bottom: 8px;
+        }
+        .input-block input {
+            width: 100%;
+            padding: 12px;
+            font-size: 18px;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            outline: none;
+            background: #f9f9f9;
+            color: #333;
+            transition: all 0.3s ease;
+        }
+        .input-block input:focus {
+            border-color: #1cc88a;
+            background-color: #fff;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background-color: #4e73df;
+            color: white;
+            border: none;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #1cc88a;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="form-container">
+            <form id="reg-form" method="POST">
+                {% csrf_token %}
+                
+                <h2>Регистрация</h2>
+
+                <div class="input-block">
+                    <label for="username">Логин</label>
+                    <input id="username" type="text" name="username" class="{% if form.username.errors %}error-input{% endif %}" required>
+                    {% for error in form.username.errors %}
+                        <div class="error-text">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="input-block">
+                    <label for="email">Email</label>
+                    <input id="email" type="email" name="email" class="{% if form.email.errors %}error-input{% endif %}" required>
+                    {% for error in form.email.errors %}
+                        <div class="error-text">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="input-block">
+                    <label for="password1">Пароль</label>
+                    <input id="password1" type="password" name="password1" class="{% if form.password1.errors %}error-input{% endif %}" required>
+                    {% for error in form.password1.errors %}
+                        <div class="error-text">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="input-block">
+                    <label for="password2">Повторите пароль</label>
+                    <input id="password2" type="password" name="password2" class="{% if form.password2.errors %}error-input{% endif %}" required>
+                    {% for error in form.password2.errors %}
+                        <div class="error-text">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="button-block">
+                    <button type="submit">Зарегистрироваться</button>
+                </div>
+            </form>
+
+                <div style="text-align: center; margin-top: 10px;">
+                    <a href="{% url 'login' %}" class="link-button">Есть аккаунт? Войти</a>
+                </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById("reg-form").addEventListener("submit", function(event) {
+            var password = document.getElementById("password1").value;
+            var password2 = document.getElementById("password2").value;
+
+            if (password !== password2) {
+                event.preventDefault();
+                alert("Пароли не совпадают.");
+            }
+        });
+    </script>
+</body>
+</html>
