@@ -1,10 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from datetime import timedelta, datetime
 from django.utils import timezone
-from datetime import timedelta
 from .models import Profile, Expense
 from django.contrib.auth import authenticate, login as user_login, logout as user_logout
 from django.contrib.auth.forms import PasswordResetForm
 from .forms import RegisterForm
+
 
 def home(request):
     # Получаем профиль пользователя
@@ -17,38 +18,47 @@ def home(request):
 
     current_datetime = timezone.now()
 
-    period = request.GET.get('period', 'all')  # Получаем параметр периода из URL (по умолчанию - все)
-
-    if period == 'last_week':
-        last_week = current_datetime - timedelta(days=7)
-        expenses = expenses.filter(date__gte=last_week)
-    elif period == 'last_month':
-        last_month = current_datetime - timedelta(days=30)
-        expenses = expenses.filter(date__gte=last_month)
+    period = request.GET.get('period', 'all')  
+    start_date_str = request.GET.get('start_date')
+    end_date_str = request.GET.get('end_date')
+    if start_date_str and end_date_str:
+        try:
+            # Преобразуем строки в объекты datetime
+            start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+            end_date = datetime.strptime(end_date_str, '%Y-%m-%d') + timedelta(days=1)  # включаем весь последний день
+            expenses = expenses.filter(date__gte=start_date, date__lt=end_date)
+        except ValueError:
+            # Если дата некорректна, не фильтруем
+            pass
+    else:
+        if period == 'last_week':
+            last_week = current_datetime - timedelta(days=7)
+            expenses = expenses.filter(date__gte=last_week)
+        elif period == 'last_month':
+            last_month = current_datetime - timedelta(days=30)
+            expenses = expenses.filter(date__gte=last_month)
 
     # Сортировка по дате
-    expenses = expenses.order_by('-date')  # Сортировка по убыванию даты
+    expenses = expenses.order_by('-date')  
 
-    # Обработка POST-запроса для добавления новой операции
     if request.method == 'POST':
         text = request.POST.get('text')
         amount = request.POST.get('amount')
         expense_type = request.POST.get('expense_type')
-        date = request.POST.get('date')
+        date_str = request.POST.get('date')
 
-        # Если дата не указана, используем текущую дату
-        if not date:
+        if not date_str:
             date = timezone.now()
         else:
-            # Преобразуем строку в дату, если она была указана
-            date = timezone.datetime.strptime(date, '%Y-%m-%dT%H:%M')
+            naive_date = datetime.strptime(date_str, '%Y-%m-%dT%H:%M')
+            date = timezone.make_aware(naive_date)
 
         expense = Expense(
             name=text,
             amount=amount,
             expense_type=expense_type,
             user=request.user,
-            date=date  # Используем переданную или текущую дату
+            date=date
         )
         expense.save()
 
@@ -61,12 +71,12 @@ def home(request):
             profile.balance -= float(amount)
 
         profile.save()
-        return redirect('/')  # Перенаправление на главную страницу
+        return redirect('/') 
 
     context = {
         'profile': profile,
         'expenses': expenses,
-        'current_datetime': current_datetime  # Передаем текущую дату для поля ввода
+        'current_datetime': current_datetime  
     }
     return render(request, 'home.html', context)
 
@@ -80,7 +90,7 @@ def login_view(request):
         usr = authenticate(request, username=login, password=password)
         if usr is not None:
             user_login(request, usr)
-            return redirect('/')  # Перенаправляем на домашнюю страницу
+            return redirect('/')  
         else:
             error = "Неверный логин или пароль."
 
@@ -89,15 +99,13 @@ def login_view(request):
 def reg_view(request):
     if request.method == 'POST':
         form = RegisterForm(request.POST)
-        if form.is_valid():  # Если форма прошла валидацию
-            user = form.save()  # Сохраняем нового пользователя
-            # Создаем профиль для пользователя с начальными значениями
-            Profile.objects.create(user=user, income=0, expenses=0, balance=0)
+        if form.is_valid(): 
+            user = form.save() 
             # Логиним пользователя
             user_login(request, user)
-            return redirect('/')  # Перенаправление на главную страницу
+            return redirect('/') 
     else:
-        form = RegisterForm()  # Если метод GET, создаем пустую форму
+        form = RegisterForm() 
 
     return render(request, 'reg.html', {'form': form})
 

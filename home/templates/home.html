@@ -4,14 +4,21 @@
 <h2>Expense Tracker</h2>
 
 <div class="period-filter">
-  <form method="GET">
+  <form method="GET" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
     <label for="period">Период:</label>
-    <select name="period" id="period">
+    <select name="period" id="period" style="padding: 6px;">
       <option value="all" {% if period == 'all' %}selected{% endif %}>Все</option>
       <option value="last_week" {% if period == 'last_week' %}selected{% endif %}>Последняя неделя</option>
       <option value="last_month" {% if period == 'last_month' %}selected{% endif %}>Последний месяц</option>
     </select>
-    <button type="submit">Фильтровать</button>
+
+    <label for="start_date">С:</label>
+    <input type="date" id="start_date" name="start_date" value="{{ start_date|default:'' }}" />
+
+    <label for="end_date">По:</label>
+    <input type="date" id="end_date" name="end_date" value="{{ end_date|default:'' }}" />
+
+    <button type="submit" style="padding: 6px 12px; cursor: pointer;">Фильтровать</button>
   </form>
 </div>
 
